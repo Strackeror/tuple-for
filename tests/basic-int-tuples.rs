@@ -26,6 +26,55 @@ fn test_varied_tuple() {
 }
 
 #[test]
+fn test_pattern_matching() {
+    struct S {
+        a: i32,
+        b: i32,
+    }
+    let mut sum = 0;
+    let tuple = (S { a: 1, b: 1 }, S { a: 2, b: 3 });
+    tuple_for!(for S { a, b } in tuple {
+        sum += a;
+        sum += b;
+    });
+
+    assert_eq!(sum, 7);
+}
+
+#[test]
+fn test_diff_types() {
+    struct S {
+        apple: u32,
+        orange: u32,
+        pear: u32,
+    }
+
+    struct T {
+        ball: u32,
+        rock: u32,
+        apple: u32,
+    }
+
+    let mut sum = 0;
+    let tuple = (
+        S {
+            apple: 2,
+            orange: 20,
+            pear: 200,
+        },
+        T {
+            ball: 5,
+            rock: 37,
+            apple: 40,
+        },
+    );
+    tuple_for!(for s in tuple {
+        sum += s.apple;
+    });
+    assert_eq!(sum, 42);
+}
+
+#[test]
 fn test_as_ref() {
     let tuple = (1, 2);
 
@@ -101,7 +150,7 @@ fn test_continue() {
 fn test_nested_context() {
     let mut sum = 0;
     tuple_for!(for _ in (1, 1, 2, 3) {
-        let _ = |i: i32| {
+        let _ = |_: i32| {
             for i in [0, 1, 2] {
                 println!("2");
                 if i == 1 {
