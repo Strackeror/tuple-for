@@ -1,7 +1,18 @@
+#[doc(hidden)]
 pub trait OptTuple {
     type Output;
 
     fn to_opt(t: Self) -> Self::Output;
+}
+
+#[doc(hidden)]
+pub use tuple_loop_macro::generate_for_loop as generate_for_loop__;
+
+#[macro_export]
+macro_rules! tuple_for {
+    ($($t:tt)*) => {
+        $crate::generate_for_loop__!($($t)*)
+    };
 }
 
 macro_rules! generate_tuple_impls {
@@ -49,29 +60,7 @@ macro_rules! generate_tuple_impls {
     };
 
 
-    (@munch () types($($t:ident)*) $($_:tt)*) => {
-        pub enum TupleForBranches {
-            $($t),*
-        }
-
-        #[macro_export]
-        macro_rules! tuple_for {
-            ($p:pat in $e:expr => $b:block) => {{
-                for branch in [$($crate::TupleForBranches::$t),*] {
-
-                }
-                loop {
-                    let ($($t),* ,) = $crate::OptTuple::to_opt($e);
-                    $(match $t {
-                        Some($p) => $b,
-                        None => ()
-                    }
-                    );*
-                    break;
-                }
-            }}
-        }
-    };
+    (@munch () types($($t:ident)*) $($_:tt)*) => { };
 
 }
 

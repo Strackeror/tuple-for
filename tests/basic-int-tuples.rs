@@ -5,8 +5,8 @@ fn test_sum_tuple() {
     let tuple = (1, 2, 3);
 
     let mut sum = 0;
-    tuple_for!(t in tuple => {
-      sum += t;
+    tuple_for!(for t in tuple {
+        sum += t;
     });
 
     assert_eq!(sum, 6);
@@ -18,8 +18,8 @@ fn test_varied_tuple() {
     let tuple = (1u32, 2u64, 3i32);
 
     let mut sum: u64 = 0;
-    tuple_for!(t in tuple => {
-      sum += t as u64;
+    tuple_for!(for t in tuple {
+        sum += t as u64;
     });
 
     assert_eq!(sum, 6);
@@ -30,12 +30,12 @@ fn test_as_ref() {
     let tuple = (1, 2);
 
     let mut sum = 0;
-    tuple_for!(t in &tuple => {
-      sum += t;
+    tuple_for!(for t in &tuple {
+        sum += t;
     });
 
-    tuple_for!(t in &tuple => {
-      sum += t;
+    tuple_for!(for t in &tuple {
+        sum += t;
     });
     assert_eq!(sum, 6);
 }
@@ -43,9 +43,14 @@ fn test_as_ref() {
 #[test]
 fn test_as_mut_ref() {
     let mut tuple = (1, 2);
-    tuple_for!(t in &mut tuple => {
-      *t += 1;
+    tuple_for!(for t in &mut tuple {
+        *t += 1;
     });
+
+    let mut arr = [1, 2, 3];
+    for t in &mut arr {
+        *t += 1;
+    }
 
     assert_eq!(tuple, (2, 3));
 }
@@ -58,7 +63,7 @@ fn test_nested_refs() {
     let mut d = "ta";
     {
         let mut tuple = ((&mut a, &mut b), (&mut c, &mut d));
-        tuple_for! {(ta, tb) in &mut tuple => {
+        tuple_for! {for (ta, tb) in &mut tuple {
             std::mem::swap(ta, tb);
         }}
         *tuple.0 .0 = 5;
@@ -71,11 +76,11 @@ fn test_nested_refs() {
 #[test]
 fn test_break() {
     let mut sum = 0;
-    tuple_for!(i in (1,1,2,3,5) => {
-        if i > 2  {
+    tuple_for!(for i in (1, 1, 2, 3, 5, 8) {
+        sum += 1;
+        if i > 2 {
             break;
         }
-        sum += i;
     });
     assert_eq!(sum, 4)
 }
@@ -83,11 +88,52 @@ fn test_break() {
 #[test]
 fn test_continue() {
     let mut sum = 0;
-    tuple_for!(i in (1,1,2,3,5,8) => {
-        if i % 2 == 0  {
+    tuple_for!(for i in (1, 1, 2, 3, 5, 8) {
+        if i % 2 == 0 {
             continue;
         }
         sum += i;
     });
     assert_eq!(sum, 10)
+}
+
+#[test]
+fn test_nested_context() {
+    let mut sum = 0;
+    tuple_for!(for _ in (1, 1, 2, 3) {
+        let _ = |i: i32| {
+            for i in [0, 1, 2] {
+                println!("2");
+                if i == 1 {
+                    break;
+                }
+            }
+        };
+
+        fn increment(i: &mut i32) {
+            for j in [0, 1, 2] {
+                if j == 0 {
+                    continue;
+                }
+                *i += 1;
+            }
+        }
+
+        struct T;
+        impl T {
+            fn increment(i: &mut i32) {
+                for j in [0, 1, 2] {
+                    if j == 0 {
+                        continue;
+                    }
+                    *i += 10;
+                }
+            }
+        }
+
+        increment(&mut sum);
+        T::increment(&mut sum);
+    });
+
+    assert_eq!(sum, 88);
 }
